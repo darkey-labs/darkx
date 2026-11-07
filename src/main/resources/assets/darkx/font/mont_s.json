@@ -1,0 +1,15 @@
+{
+	"providers": [
+		{
+			"type": "ttf",
+			"file": "darkx:montserrat_medium.ttf",
+			"shift": [0.0, 0.0],
+			"size": 7.0,
+			"oversample": 6.0
+		},
+		{
+			"type": "reference",
+			"id": "minecraft:default"
+		}
+	]
+}

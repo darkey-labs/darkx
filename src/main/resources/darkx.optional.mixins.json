@@ -1,0 +1,22 @@
+{
+	"required": false,
+	"package": "dev.darkx.visuals.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"OverlayTextureMixin",
+		"LevelWeatherMixin",
+		"FogEnvironmentMixin",
+		"ClientLevelSkyMixin",
+		"MinecraftScreenMixin",
+		"PauseScreenMixin",
+		"ScreenBackgroundMixin",
+		"AbstractButtonMixin",
+		"LoadingOverlayMixin",
+		"ChatComponentAccessor",
+		"ChatComponentMixin",
+		"ClientPacketListenerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

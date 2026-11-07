@@ -1,0 +1,20 @@
+{
+	"required": true,
+	"package": "dev.darkx.visuals.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"ItemInHandRendererMixin",
+		"LivingEntityMixin",
+		"EntityRenderDispatcherMixin",
+		"AbstractClientPlayerMixin",
+		"PlayerInfoMixin",
+		"AvatarRendererMixin",
+		"PlayerTabOverlayAccessor",
+		"GameRendererMixin",
+		"GameRendererAccessor",
+		"StringDecomposerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -1,0 +1,49 @@
+{
+  "rules": {
+    "darkx": {
+      "users": {
+        ".indexOn": [
+          "s",
+          "l"
+        ],
+        ".read": true,
+        "$uid": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['n','s','t']) && newData.child('n').isString() && newData.child('n').val().length<=16 && newData.child('s').isString() && newData.child('s').val().length<=64"
+        }
+      },
+      "tf": {
+        "$me": {
+          ".read": true,
+          "$them": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['n','t']) && newData.child('n').isString() && newData.child('n').val().length<=16"
+          }
+        }
+      },
+      "inbox": {
+        "$me": {
+          ".read": true,
+          "$them": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['n','t']) && newData.child('n').isString() && newData.child('n').val().length<=16"
+          }
+        }
+      },
+      "skins": {
+        "$nick": {
+          ".read": true,
+          ".write": "$nick.matches(/^[a-z0-9_]{3,16}$/)",
+          ".validate": "newData.hasChildren(['png','model']) && newData.child('png').isString() && newData.child('png').val().length<=90000 && (newData.child('model').val()==='classic' || newData.child('model').val()==='slim')"
+        }
+      },
+      "capes": {
+        "$nick": {
+          ".read": true,
+          ".write": "$nick.matches(/^[a-z0-9_]{3,16}$/)",
+          ".validate": "newData.child('id').isString() || (newData.child('png').isString() && newData.child('png').val().length<=80000)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "darkx",
+	"version": "${version}",
+	"name": "DarkX Visuals",
+	"description": "Визуальный клиент: OLED ClickGUI, HUD-модули, JumpCircles, ChinaHat, ViewModel и другое.",
+	"authors": ["DarkX"],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/darkx/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["dev.darkx.visuals.DarkXClient"]
+	},
+	"mixins": ["darkx.mixins.json", "darkx.optional.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

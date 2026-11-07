@@ -1,0 +1,11 @@
+{
+	"providers": [
+		{
+			"type": "ttf",
+			"file": "darkx:lucide.ttf",
+			"shift": [0.0, 0.0],
+			"size": 8.0,
+			"oversample": 6.0
+		}
+	]
+}
