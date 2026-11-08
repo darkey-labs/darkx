@@ -8,6 +8,7 @@ import dev.darkx.visuals.core.Stats;
 import dev.darkx.visuals.core.Theme;
 import dev.darkx.visuals.core.Waypoints;
 import dev.darkx.visuals.modules.AntiAcBotModule;
+import dev.darkx.visuals.modules.HudModule;
 import dev.darkx.visuals.modules.NetworkModule;
 import dev.darkx.visuals.ui.Icons;
 import dev.darkx.visuals.ui.Logo;
@@ -33,7 +34,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -92,14 +96,14 @@ public final class Widgets {
 			if (preview && mc.player != null) {
 				target = mc.player;
 				seen = now;
-			} else if (looked instanceof LivingEntity le && le != mc.player && !AntiAcBotModule.isBot(le)) {
+			} else if (looked instanceof LivingEntity le && le != mc.player && !le.isInvisible() && !AntiAcBotModule.isBot(le)) {
 				target = le;
 				seen = now;
 			}
 			if (target == null) return;
 
 			// появляется «с меньшего в большее», пропадает наоборот
-			boolean present = preview || (!target.isRemoved() && now - seen < 1500L);
+			boolean present = preview || (!target.isRemoved() && !target.isInvisible() && now - seen < 1500L);
 			float pop = Motion.pop("target.pop", present);
 			if (!present && pop <= 0.004f) {
 				target = null;
@@ -599,10 +603,14 @@ public final class Widgets {
 
 	// ======================================================================== NEAR
 
-	/** Игроки в радиусе 50 блоков: голова, ник, дистанция и стрелка в их сторону. */
+	/** Игроки в радиусе 50 блоков: голова, ник, дистанция и стрелка в их сторону.
+	 *  Невидимых игроков не показывает; без настройки «Неар: сквозь стены» — только тех, кого видно (прямая видимость). */
 	public static final class Near extends HudWidget {
 		private static final float RANGE = 50f;
 		private static final int MAX_ROWS = 8;
+		/** Сколько держим игрока в списке после потери прямой видимости (чтобы строки не мигали на углах). */
+		private static final long SEEN_GRACE_MS = 1200L;
+		private static final long LOS_EVERY_MS = 100L;
 
 		private record Row(UUID id, PlayerSkin skin, String name, float dist, float rel, int color, boolean dx) {}
 
@@ -613,6 +621,8 @@ public final class Widgets {
 		private final Map<UUID, Row> known = new LinkedHashMap<>();
 		private final Map<UUID, Integer> slots = new HashMap<>();
 		private int lastRows = 1;
+		private final Map<UUID, Long> lastSeen = new HashMap<>();
+		private final Map<UUID, Long> checkedAt = new HashMap<>();
 
 		public Near() { super("near", "Неар ХУД", 160, 50); icon = Icons.RADAR; }
 
@@ -635,15 +645,42 @@ public final class Widgets {
 		private static final UUID DEMO_A = UUID.nameUUIDFromBytes("darkx-demo-a".getBytes());
 		private static final UUID DEMO_B = UUID.nameUUIDFromBytes("darkx-demo-b".getBytes());
 
+		/** Игрок в прямой видимости: луч от глаз до головы/торса/ног не упирается в блоки (стекло не мешает). */
+		private static boolean visibleNow(Minecraft mc, AbstractClientPlayer p) {
+			Vec3 from = mc.player.getEyePosition();
+			double[] ys = { p.getEyeHeight(), p.getBbHeight() * 0.5, 0.1 };
+			for (double dy : ys) {
+				Vec3 to = new Vec3(p.getX(), p.getY() + dy, p.getZ());
+				if (mc.level.clip(new ClipContext(from, to, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, mc.player)).getType() == HitResult.Type.MISS) return true;
+			}
+			return false;
+		}
+
+		/** Видимость с кэшем (проверка раз в 100 мс) и короткой «задержкой» после потери из виду. */
+		private boolean canSee(Minecraft mc, AbstractClientPlayer p, long nowMs) {
+			UUID id = p.getUUID();
+			Long chk = checkedAt.get(id);
+			if (chk == null || nowMs - chk >= LOS_EVERY_MS) {
+				checkedAt.put(id, nowMs);
+				if (visibleNow(mc, p)) lastSeen.put(id, nowMs);
+			}
+			Long ls = lastSeen.get(id);
+			return ls != null && nowMs - ls < SEEN_GRACE_MS;
+		}
+
 		@Override public void render(GuiGraphics g, boolean preview) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player == null || mc.level == null) return;
 
+			HudModule hud = ModuleManager.get(HudModule.class);
+			boolean throughWalls = hud != null && hud.nearWalls.value;
+			long nowMs = System.currentTimeMillis();
 			List<Row> rows = new ArrayList<>();
 			for (AbstractClientPlayer p : mc.level.players()) {
-				if (p == mc.player || p.isRemoved() || p.isSpectator() || AntiAcBotModule.isFake(p) || AntiAcBotModule.isBot(p)) continue;
+				if (p == mc.player || p.isRemoved() || p.isSpectator() || p.isInvisible() || AntiAcBotModule.isFake(p) || AntiAcBotModule.isBot(p)) continue;
 				float d = mc.player.distanceTo(p);
 				if (d > RANGE) continue;
+				if (!throughWalls && !canSee(mc, p, nowMs)) continue;
 				double dx = p.getX() - mc.player.getX(), dz = p.getZ() - mc.player.getZ();
 				float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
 				float rel = Mth.wrapDegrees(yaw - mc.player.getYRot());
@@ -651,6 +688,8 @@ public final class Widgets {
 				rows.add(new Row(p.getUUID(), p.getSkin(), p.getName().getString(), d, rel, mk != null ? (mk.color | 0xFF000000) : Theme.accent(),
 					Ecosystem.isUser(p.getUUID()) && NetworkModule.showBadge()));
 			}
+			lastSeen.values().removeIf((t) -> nowMs - t > 10_000L);
+			checkedAt.values().removeIf((t) -> nowMs - t > 10_000L);
 			rows.sort(Comparator.comparingDouble(Row::dist));
 			if (rows.size() > MAX_ROWS) rows = new ArrayList<>(rows.subList(0, MAX_ROWS));
 

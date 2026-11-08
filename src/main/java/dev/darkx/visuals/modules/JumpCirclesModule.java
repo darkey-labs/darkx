@@ -39,6 +39,7 @@ public final class JumpCirclesModule extends Module {
 		long now = System.currentTimeMillis();
 		for (Player p : players) {
 			if (AntiAcBotModule.isBot(p)) continue;
+			if (p != mc.player && p.isInvisible()) continue; // прыжки невидимых не показываем
 			boolean onGround = p.onGround();
 			Boolean was = ground.put(p.getId(), onGround);
 			if (was != null && was && !onGround && p.getDeltaMovement().y > 0.1) {

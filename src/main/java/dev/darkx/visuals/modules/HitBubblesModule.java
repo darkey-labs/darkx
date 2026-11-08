@@ -39,6 +39,7 @@ public final class HitBubblesModule extends Module {
 			LivingEntity le = (LivingEntity) e;
 			if (le == mc.player && !self.value) continue;
 			if (AntiAcBotModule.isFake(le)) continue;
+			if (le != mc.player && le.isInvisible()) continue; // по невидимым пузыри не рисуем
 			int id = le.getId();
 			int ht = le.hurtTime;
 			Integer prev = last.get(id);

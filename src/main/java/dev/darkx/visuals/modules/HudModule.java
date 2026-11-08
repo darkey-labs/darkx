@@ -9,6 +9,8 @@ import dev.darkx.visuals.hud.HudManager;
 public final class HudModule extends Module {
 	public final Setting.Multi show = add(new Setting.Multi("Отображать...", HudManager.titles(), HudManager.defaults()));
 	public final Setting.Num opacity = add(new Setting.Num("Прозрачность фона", 0, 100, 5, 70, "%"));
+	/** «Рядом»: по умолчанию только игроки в прямой видимости. Включи, чтобы видеть и тех, кто за стеной. */
+	public final Setting.Bool nearWalls = add(new Setting.Bool("Неар: сквозь стены", false));
 
 	public HudModule() {
 		super("HUD", "Информационные худы: таргет, профиль, эффекты, броня и другие.", Category.VISUAL);

@@ -28,11 +28,11 @@ public final class TargetEspModule extends Module {
 	@Override public void onTick(Minecraft mc) {
 		long now = System.currentTimeMillis();
 		Entity e = mc.crosshairPickEntity;
-		if (e instanceof LivingEntity le && le != mc.player && !AntiAcBotModule.isBot(le)) {
+		if (e instanceof LivingEntity le && le != mc.player && !le.isInvisible() && !AntiAcBotModule.isBot(le)) {
 			target = le;
 			seen = now;
 		}
-		if (target != null && (target.isRemoved() || now - seen > (long) (keep.f() * 1000f))) target = null;
+		if (target != null && (target.isRemoved() || target.isInvisible() || now - seen > (long) (keep.f() * 1000f))) target = null;
 	}
 
 	@Override public void onDisable() {

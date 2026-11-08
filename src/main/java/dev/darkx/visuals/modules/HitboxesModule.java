@@ -49,6 +49,7 @@ public final class HitboxesModule extends Module {
 
 		for (Entity e : list) {
 			if (e == me || e.isRemoved() || e.isSpectator()) continue;
+			if (e instanceof LivingEntity && e.isInvisible()) continue; // невидимых (зелье) не выдаём
 			boolean player = e instanceof Player;
 			boolean item = e instanceof ItemEntity;
 			boolean mob = e instanceof LivingEntity && !player;
